@@ -4,6 +4,16 @@
     "name": "Buku API",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
   "variable": [
     {
       "key": "base_url",
@@ -37,12 +47,22 @@
           "mode": "raw",
           "raw": "{\n  \"email\": \"admin@buku.test\",\n  \"password\": \"password\"\n}"
         },
-        "url": {
-          "raw": "{{base_url}}/login",
-          "host": ["{{base_url}}"],
-          "path": ["login"]
+        "url": "{{base_url}}/login"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Login berhasil', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.collectionVariables.set('token', pm.response.json().token);"
+            ]
+          }
         }
-      }
+      ]
     },
     {
       "name": "List Books",
@@ -52,17 +72,9 @@
           {
             "key": "Accept",
             "value": "application/json"
-          },
-          {
-            "key": "Authorization",
-            "value": "Bearer {{token}}"
           }
         ],
-        "url": {
-          "raw": "{{base_url}}/books",
-          "host": ["{{base_url}}"],
-          "path": ["books"]
-        }
+        "url": "{{base_url}}/books"
       }
     },
     {
@@ -73,17 +85,9 @@
           {
             "key": "Accept",
             "value": "application/json"
-          },
-          {
-            "key": "Authorization",
-            "value": "Bearer {{token}}"
           }
         ],
-        "url": {
-          "raw": "{{base_url}}/books/{{book_id}}",
-          "host": ["{{base_url}}"],
-          "path": ["books", "{{book_id}}"]
-        }
+        "url": "{{base_url}}/books/{{book_id}}"
       }
     },
     {
@@ -98,22 +102,28 @@
           {
             "key": "Content-Type",
             "value": "application/json"
-          },
-          {
-            "key": "Authorization",
-            "value": "Bearer {{token}}"
           }
         ],
         "body": {
           "mode": "raw",
           "raw": "{\n  \"title\": \"Laskar Pelangi\",\n  \"author\": \"Andrea Hirata\",\n  \"published_year\": 2005\n}"
         },
-        "url": {
-          "raw": "{{base_url}}/books",
-          "host": ["{{base_url}}"],
-          "path": ["books"]
+        "url": "{{base_url}}/books"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Buku berhasil dibuat', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "pm.collectionVariables.set('book_id', pm.response.json().data.id);"
+            ]
+          }
         }
-      }
+      ]
     },
     {
       "name": "Update Book",
@@ -127,21 +137,13 @@
           {
             "key": "Content-Type",
             "value": "application/json"
-          },
-          {
-            "key": "Authorization",
-            "value": "Bearer {{token}}"
           }
         ],
         "body": {
           "mode": "raw",
           "raw": "{\n  \"title\": \"Laskar Pelangi (Edisi Revisi)\",\n  \"author\": \"Andrea Hirata\",\n  \"published_year\": 2005\n}"
         },
-        "url": {
-          "raw": "{{base_url}}/books/{{book_id}}",
-          "host": ["{{base_url}}"],
-          "path": ["books", "{{book_id}}"]
-        }
+        "url": "{{base_url}}/books/{{book_id}}"
       }
     },
     {
@@ -152,17 +154,9 @@
           {
             "key": "Accept",
             "value": "application/json"
-          },
-          {
-            "key": "Authorization",
-            "value": "Bearer {{token}}"
           }
         ],
-        "url": {
-          "raw": "{{base_url}}/books/{{book_id}}",
-          "host": ["{{base_url}}"],
-          "path": ["books", "{{book_id}}"]
-        }
+        "url": "{{base_url}}/books/{{book_id}}"
       }
     },
     {
@@ -173,17 +167,9 @@
           {
             "key": "Accept",
             "value": "application/json"
-          },
-          {
-            "key": "Authorization",
-            "value": "Bearer {{token}}"
           }
         ],
-        "url": {
-          "raw": "{{base_url}}/logout",
-          "host": ["{{base_url}}"],
-          "path": ["logout"]
-        }
+        "url": "{{base_url}}/logout"
       }
     }
   ]
