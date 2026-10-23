@@ -41,7 +41,7 @@ services:
     command: >
       sh -c "until php artisan migrate --force && php artisan db:seed --force; do
       echo 'Waiting for MySQL to accept connections...'; sleep 5;
-      done; apache2-foreground"
+      done; frankenphp run --config /etc/caddy/Caddyfile --adapter caddyfile"
 
   frontend:
     build:
