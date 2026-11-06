@@ -1,6 +1,6 @@
-FROM dunglas/frankenphp:1-php8.2-bookworm
+FROM php:8.2-cli-bookworm
 
-RUN install-php-extensions pdo_mysql \
+RUN docker-php-ext-install pdo_mysql \
     && apt-get update \
     && apt-get install -y --no-install-recommends curl git unzip \
     && rm -rf /var/lib/apt/lists/*
@@ -13,10 +13,13 @@ COPY composer.json composer.lock ./
 RUN composer install --no-dev --no-interaction --prefer-dist --no-scripts
 
 COPY . .
+COPY docker-entrypoint.sh /usr/local/bin/app-entrypoint
+RUN sed -i 's/\r$//' /usr/local/bin/app-entrypoint \
+    && chmod +x /usr/local/bin/app-entrypoint
 
 RUN composer dump-autoload --no-dev --optimize \
     && chown -R www-data:www-data storage bootstrap/cache
 
-COPY Caddyfile /etc/caddy/Caddyfile
+ENTRYPOINT ["/usr/local/bin/app-entrypoint"]
 
 EXPOSE 80
