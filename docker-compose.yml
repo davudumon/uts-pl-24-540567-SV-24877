@@ -14,6 +14,12 @@ services:
       interval: 5s
       timeout: 5s
       retries: 20
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   backend:
     build:
@@ -35,6 +41,9 @@ services:
       SESSION_DRIVER: database
       CACHE_STORE: database
       QUEUE_CONNECTION: database
+      LOG_CHANNEL: stack
+      LOG_STACK: stdout
+      LOG_LEVEL: info
     depends_on:
       db:
         condition: service_healthy
@@ -42,6 +51,17 @@ services:
       sh -c "until php artisan migrate --force && php artisan db:seed --force; do
       echo 'Waiting for MySQL to accept connections...'; sleep 5;
       done; frankenphp run --config /etc/caddy/Caddyfile --adapter caddyfile"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost/health > /dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   frontend:
     build:
@@ -54,6 +74,17 @@ services:
       - "8080:80"
     depends_on:
       - backend
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://localhost/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 volumes:
   library-db:

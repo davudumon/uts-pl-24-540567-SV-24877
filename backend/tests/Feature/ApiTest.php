@@ -2,8 +2,9 @@
 
 namespace Tests\Feature;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Log;
 use Tests\TestCase;
 
 class ApiTest extends TestCase
@@ -50,9 +51,29 @@ class ApiTest extends TestCase
     {
         $user = User::factory()->create();
 
+        Log::spy();
+
         $this->actingAs($user, 'sanctum')
             ->postJson('/api/books', [])
             ->assertUnprocessable()
             ->assertJsonValidationErrors(['title', 'author', 'published_year']);
+
+        Log::shouldHaveReceived('warning')
+            ->with('Book validation failed', \Mockery::on(fn (array $context): bool => $context['who'] === 'authenticated_user'
+                && $context['action'] === 'create_book'
+                && $context['reason'] === 'required_book_fields_invalid'));
+    }
+
+    public function test_health_endpoint_checks_database_and_cache(): void
+    {
+        $this->getJson('/health')
+            ->assertOk()
+            ->assertJson([
+                'status' => 'healthy',
+                'checks' => [
+                    'database' => 'ok',
+                    'cache' => 'ok',
+                ],
+            ]);
     }
 }

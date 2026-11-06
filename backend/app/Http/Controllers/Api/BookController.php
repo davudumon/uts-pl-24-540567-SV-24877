@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Book;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class BookController extends Controller
 {
@@ -24,11 +27,43 @@ class BookController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
-        $book = Book::create($request->validate([
-            'title' => ['required', 'string', 'max:255'],
-            'author' => ['required', 'string', 'max:255'],
-            'published_year' => ['required', 'integer', 'min:1000', 'max:2100'],
-        ]));
+        try {
+            $validated = $request->validate([
+                'title' => ['required', 'string', 'max:255'],
+                'author' => ['required', 'string', 'max:255'],
+                'published_year' => ['required', 'integer', 'min:1000', 'max:2100'],
+            ]);
+        } catch (ValidationException $exception) {
+            Log::warning('Book validation failed', [
+                'who' => 'authenticated_user',
+                'action' => 'create_book',
+                'reason' => 'required_book_fields_invalid',
+                'fields' => array_keys($exception->errors()),
+            ]);
+
+            throw $exception;
+        }
+
+        try {
+            $book = Book::create($validated);
+        } catch (Throwable $exception) {
+            Log::error('Book persistence failed', [
+                'who' => 'authenticated_user',
+                'action' => 'create_book',
+                'reason' => 'database_write_failed',
+                'exception' => $exception::class,
+            ]);
+
+            return response()->json([
+                'message' => 'Buku gagal disimpan karena layanan basis data bermasalah.',
+            ], 503);
+        }
+
+        Log::info('Book saved', [
+            'who' => 'authenticated_user',
+            'action' => 'create_book',
+            'reason' => 'book_created_successfully',
+        ]);
 
         return response()->json([
             'message' => 'Buku berhasil ditambahkan.',
